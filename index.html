@@ -1767,7 +1767,7 @@
   var text = '';
   for (var i = 0; i < parts.length; i += 1) {
     var request = new XMLHttpRequest();
-    request.open('GET', parts[i] + '?v=20260718042007', false);
+    request.open('GET', parts[i] + '?v=20260720165635', false);
     request.send(null);
     if (request.status < 200 || request.status >= 300) {
       throw new Error('Cannot load dashboard data chunk: ' + parts[i]);
@@ -1784,7 +1784,7 @@
   var text = '';
   for (var i = 0; i < parts.length; i += 1) {
     var request = new XMLHttpRequest();
-    request.open('GET', parts[i] + '?v=20260718042007', false);
+    request.open('GET', parts[i] + '?v=20260720165635', false);
     request.send(null);
     if (request.status < 200 || request.status >= 300) {
       throw new Error('Cannot load dashboard data chunk: ' + parts[i]);
@@ -1801,7 +1801,7 @@
   var text = '';
   for (var i = 0; i < parts.length; i += 1) {
     var request = new XMLHttpRequest();
-    request.open('GET', parts[i] + '?v=20260718042007', false);
+    request.open('GET', parts[i] + '?v=20260720165635', false);
     request.send(null);
     if (request.status < 200 || request.status >= 300) {
       throw new Error('Cannot load dashboard data chunk: ' + parts[i]);
@@ -1914,12 +1914,23 @@
       return text.length > maxLength ? text.slice(0, maxLength - 1) + '…' : text;
     }
 
-    function highlightDate(item) {
-      const raw = item?.highlight?.asOfDate;
+    function compactDate(raw) {
       if (!raw) return '-';
       const match = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (!match) return raw;
       return match[1] + '-' + match[2] + '-' + match[3];
+    }
+
+    function highlightDate(item) {
+      return compactDate(item?.highlight?.asOfDate);
+    }
+
+    function latestQuoteDate(item) {
+      return compactDate(
+        item?.highlight?.latestQuoteAt
+        || item?.highlight?.priceSensitiveProvenance?.latestQuoteAt
+        || item?.marketSnapshot?.latestQuoteAt
+      );
     }
 
     function bookValuePerShare(item, latest) {
@@ -2376,6 +2387,11 @@
       const latestGrossMargin = grossProfitMarginFrom(latest, item);
       const highlight = item.highlight || {};
       const factsheetAsOf = highlightDate(item);
+      const quoteFetchedAsOf = latestQuoteDate(item);
+      const usesLiveQuote = highlight.priceSensitiveProvenance?.usesLiveQuote === true && quoteFetchedAsOf !== '-';
+      const priceDateContext = usesLiveQuote
+        ? 'ดึงราคาล่าสุดเมื่อ ' + quoteFetchedAsOf + (factsheetAsOf !== '-' ? ' | ฐาน SET factsheet ' + factsheetAsOf : '')
+        : 'SET factsheet ณ ' + factsheetAsOf;
       const marketCap = toNumber(highlight.marketCap);
       const price = toNumber(highlight.price);
       const dividendYield = toNumber(highlight.dividendYield);
@@ -2385,7 +2401,7 @@
       const bvps = bookValuePerShare(item, latest);
       const dividendPolicy = shortText(item.profile?.dividendPolicy);
       const dividendHint = dividendYield !== null
-        ? 'Dividend yield จาก SET factsheet ณ ' + factsheetAsOf
+        ? (usesLiveQuote ? 'Dividend yield ปรับตามราคาล่าสุด | ' : 'Dividend yield จาก ') + priceDateContext
         : (dividendPolicy ? 'นโยบาย: ' + dividendPolicy : 'ไม่พบข้อมูลปันผลใน SET factsheet');
       const bookHint = 'ส่วนของผู้ถือหุ้น ' + baht(latest.equity) + (pbRatio !== null ? ' | P/B ' + ratio(pbRatio, 'x') : '');
       const form = stockFormId(item);
@@ -2413,11 +2429,11 @@
         ['Profit CAGR', percent(investment?.quality?.profitCagr ?? item.vi.profitCagr), investment?.quality?.profitGrowthMethod === 'post-turnaround-positive-base-cagr'
           ? 'Post-turnaround CAGR ปี ' + investment.quality.profitGrowthStartYear + '-' + investment.quality.profitGrowthEndYear
           : investment?.quality?.profitGrowthMethod?.includes('undefined') ? 'CAGR ใช้ไม่ได้เพราะฐานกำไรติดลบหรือปลายงวดขาดทุน' : 'คำนวณจากงบรายปีช่วงที่มีข้อมูล'],
-        ['มูลค่าตลาด', marketCap !== null ? baht(marketCap / 1000) : '-', 'ราคาล่าสุดใน factsheet ' + (price !== null ? fmt.format(price) : '-') + ' บาท'],
+        ['มูลค่าตลาด', marketCap !== null ? baht(marketCap / 1000) : '-', 'ราคา ' + (price !== null ? fmt.format(price) : '-') + ' บาท | ' + priceDateContext],
         ['ปันผล', percent(dividendYield), dividendHint],
         ['Book value', bahtPerShare(bvps), bookHint],
         ['Valuation ล่าสุด', peRatio !== null ? 'P/E ' + ratio(peRatio) : (pbRatio !== null ? 'P/B ' + ratio(pbRatio) : '-'),
-          'P/B ' + ratio(pbRatio) + ' | EV/EBITDA ' + ratio(evToEbitda) + ' | ณ ' + factsheetAsOf],
+          'P/B ' + ratio(pbRatio) + ' | EV/EBITDA ' + ratio(evToEbitda) + ' | ' + priceDateContext],
         ['Investment evidence', Number.isFinite(investment?.scorecard?.overall) ? fmt0.format(investment.scorecard.overall) + '/100' : '-',
           (Number.isFinite(investment?.pricePerformance?.yearRangePosition) ? 'ราคาอยู่ ' + percent(investment.pricePerformance.yearRangePosition) + ' ของกรอบปี' : 'คะแนนคัดกรองจากหลักฐานที่มี') + ' | ไม่ใช่คำแนะนำซื้อขาย'],
       ];
