@@ -1763,11 +1763,11 @@
   <script id="dashboard-data" type="application/json"></script>
 <script>
 (function () {
-  var parts = ["data/dashboard-data.part000.json","data/dashboard-data.part001.json","data/dashboard-data.part002.json","data/dashboard-data.part003.json"];
+  var parts = ["data/dashboard-data.part000.json","data/dashboard-data.part001.json","data/dashboard-data.part002.json","data/dashboard-data.part003.json","data/dashboard-data.part004.json"];
   var text = '';
   for (var i = 0; i < parts.length; i += 1) {
     var request = new XMLHttpRequest();
-    request.open('GET', parts[i] + '?v=20260720165635', false);
+    request.open('GET', parts[i] + '?v=20260721183436', false);
     request.send(null);
     if (request.status < 200 || request.status >= 300) {
       throw new Error('Cannot load dashboard data chunk: ' + parts[i]);
@@ -1784,7 +1784,7 @@
   var text = '';
   for (var i = 0; i < parts.length; i += 1) {
     var request = new XMLHttpRequest();
-    request.open('GET', parts[i] + '?v=20260720165635', false);
+    request.open('GET', parts[i] + '?v=20260721183436', false);
     request.send(null);
     if (request.status < 200 || request.status >= 300) {
       throw new Error('Cannot load dashboard data chunk: ' + parts[i]);
@@ -1801,7 +1801,7 @@
   var text = '';
   for (var i = 0; i < parts.length; i += 1) {
     var request = new XMLHttpRequest();
-    request.open('GET', parts[i] + '?v=20260720165635', false);
+    request.open('GET', parts[i] + '?v=20260721183436', false);
     request.send(null);
     if (request.status < 200 || request.status >= 300) {
       throw new Error('Cannot load dashboard data chunk: ' + parts[i]);
